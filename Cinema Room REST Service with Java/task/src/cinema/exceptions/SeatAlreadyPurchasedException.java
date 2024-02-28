@@ -1,4 +1,7 @@
 package cinema.exceptions;
 
-public class SeatAlreadyPurchasedException extends Throwable {
+public class SeatAlreadyPurchasedException extends RuntimeException {
+    public SeatAlreadyPurchasedException(String message) {
+        super(message);
+    }
 }

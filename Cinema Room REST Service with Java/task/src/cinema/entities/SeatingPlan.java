@@ -1,6 +1,5 @@
 package cinema.entities;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class SeatingPlan {

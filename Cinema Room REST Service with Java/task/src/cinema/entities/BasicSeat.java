@@ -1,6 +1,8 @@
 package cinema.entities;
 
-public class BasicSeat implements cinema.interfaces.Seat {
+import cinema.interfaces.Seat;
+
+public class BasicSeat implements Seat {
     private int row, column ;
 
     public BasicSeat() {
