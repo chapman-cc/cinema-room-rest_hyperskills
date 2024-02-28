@@ -12,9 +12,5 @@ public class CinemaSeat extends SeatDecorator {
         super(seat, price);
     }
 
-    public static class SeatAlreadyPurchasedException extends Throwable {
-    }
 
-    public static class SeatRowColumnOutOfBound extends Throwable {
-    }
 }

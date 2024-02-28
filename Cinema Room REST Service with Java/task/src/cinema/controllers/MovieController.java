@@ -4,14 +4,12 @@ import cinema.entities.BasicSeat;
 import cinema.entities.Cinema;
 import cinema.entities.CinemaSeat;
 import cinema.entities.SeatingPlan;
-import cinema.interfaces.Seat;
+import cinema.exceptions.SeatAlreadyPurchasedException;
+import cinema.exceptions.SeatRowColumnOutOfBound;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -34,39 +32,37 @@ public class MovieController {
     }
 
     @PostMapping("/purchase")
-    public ResponseEntity<?> purchase(@RequestBody @NonNull BasicSeat selection) {
-        try {
-
-            int row = selection.getRow();
-            int column = selection.getColumn();
-
-
-            if (row < 0 && row > cinema.getRows() || column < 0 && column > cinema.getColumns()) {
-                throw new CinemaSeat.SeatRowColumnOutOfBound();
-            }
+    public ResponseEntity<CinemaSeat> purchase(@RequestBody @NonNull BasicSeat selection) throws SeatRowColumnOutOfBound, SeatAlreadyPurchasedException {
+        int row = selection.getRow();
+        int column = selection.getColumn();
+        
+        if (row > 0 && row <= cinema.getRows() && column > 0 && column <= cinema.getColumns()) {
             for (CinemaSeat seat : seats) {
                 if (seat.getRow() == row && seat.getColumn() == column) {
-                    if (seat.isAvailable()) {
-                        seat.setAvailable(false);
-                        return ResponseEntity.ok(seat);
+                    if (!seat.isAvailable()) {
+                        throw new SeatAlreadyPurchasedException();
                     }
-                    throw new CinemaSeat.SeatAlreadyPurchasedException();
+                    seat.setAvailable(false);
+                    return ResponseEntity.ok(seat);
                 }
             }
-
-            throw new CinemaSeat.SeatRowColumnOutOfBound();
-        } catch (CinemaSeat.SeatAlreadyPurchasedException e) {
-            return ResponseEntity.badRequest().body(
-                    getError("The ticket has been already purchased!")
-            );
-        } catch (CinemaSeat.SeatRowColumnOutOfBound e) {
-            return ResponseEntity.badRequest().body(
-                    getError("The number of a row or a column is out of bounds!")
-            );
         }
+
+        throw new SeatRowColumnOutOfBound();
     }
 
-    private static Map<String, String> getError(String message) {
-        return Map.of("error", message);
+    @ExceptionHandler(SeatAlreadyPurchasedException.class)
+    public ResponseEntity<?> handleSeatAlreadyPurchasedException(SeatAlreadyPurchasedException e) {
+        return ResponseEntity.badRequest().body(
+                Map.of("error", "The ticket has been already purchased!")
+        );
+    }
+
+    @ExceptionHandler(SeatRowColumnOutOfBound.class)
+    public ResponseEntity<?> handleSeatRowColumnOutOfBound(SeatRowColumnOutOfBound e) {
+        return ResponseEntity.badRequest().body(
+                Map.of("error", "The number of a row or a column is out of bounds!")
+        );
     }
 }
+
